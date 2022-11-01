@@ -30,9 +30,6 @@
 #include <Canis/Data/Vertex.hpp>
 #include <Canis/External/entt.hpp>
 
-#include "Scenes/MainScene.hpp"
-#include "Scenes/ShadowDemoScene.hpp"
-#include "Scenes/LightingDemoScene.hpp"
 #include "Scenes/SpriteDemoScene.hpp"
 
 

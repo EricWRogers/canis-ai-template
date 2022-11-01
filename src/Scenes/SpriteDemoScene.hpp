@@ -29,18 +29,13 @@
 #include <Canis/External/entt.hpp>
 #include <Canis/GameHelper/AStar.hpp>
 
-#include <Canis/ECS/Systems/RenderMeshSystem.hpp>
-#include <Canis/ECS/Systems/RenderSkyboxSystem.hpp>
 #include <Canis/ECS/Systems/RenderTextSystem.hpp>
 #include <Canis/ECS/Systems/SpriteRenderer2DSystem.hpp>
 #include <Canis/ECS/Systems/RenderHUDSystem.hpp>
 
-#include <Canis/ECS/Components/TransformComponent.hpp>
 #include <Canis/ECS/Components/ColorComponent.hpp>
 #include <Canis/ECS/Components/RectTransformComponent.hpp>
 #include <Canis/ECS/Components/TextComponent.hpp>
-#include <Canis/ECS/Components/MeshComponent.hpp>
-#include <Canis/ECS/Components/SphereColliderComponent.hpp>
 #include <Canis/ECS/Components/Sprite2DComponent.hpp>
 #include <Canis/ECS/Components/UIImageComponent.hpp>
 #include <Canis/ECS/Components/Camera2DComponent.hpp>
@@ -55,7 +50,6 @@ class SpriteDemoScene : public Canis::Scene
 
         Canis::RenderTextSystem *renderTextSystem;
         Canis::SpriteRenderer2DSystem *spriteRenderer2DSystem;
-        Canis::RenderHUDSystem *renderHUDSystem;
 
         bool firstMouseMove = true;
         bool mouseLock = false;
@@ -63,9 +57,9 @@ class SpriteDemoScene : public Canis::Scene
         int cubeModelId = 0;
         int antonioFontId = 0;
 
-        Canis::GLTexture supperPupStudioLogoTexture = {};
+        Canis::GLTexture superPupStudioLogoTexture = {};
 
-        entt::entity camera2DEntt;
+        entt::entity camera2DEntity;
 
     public:
         SpriteDemoScene(std::string _name) : Canis::Scene(_name) {}
@@ -73,7 +67,6 @@ class SpriteDemoScene : public Canis::Scene
         {
             delete renderTextSystem;
             delete spriteRenderer2DSystem;
-            delete renderHUDSystem;
         }
         
         void PreLoad()
@@ -85,7 +78,7 @@ class SpriteDemoScene : public Canis::Scene
             glEnable(GL_ALPHA);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-            // glEnable(GL_CULL_FACE);
+            
             // build and compile our shader program
             shader.Compile("assets/shaders/lighting.vs", "assets/shaders/lighting.fs");
             shader.AddAttribute("aPos");
@@ -93,18 +86,15 @@ class SpriteDemoScene : public Canis::Scene
             shader.AddAttribute("aTexcoords");
             shader.Link();
 
-            spriteShader.Compile(
-                "assets/shaders/sprite.vs",
-                "assets/shaders/sprite.fs"
-            );
+            spriteShader.Compile("assets/shaders/sprite.vs", "assets/shaders/sprite.fs");
             spriteShader.AddAttribute("vertexPosition");
             spriteShader.AddAttribute("vertexColor");
             spriteShader.AddAttribute("vertexUV");
             spriteShader.Link();
 
             // load icon
-            supperPupStudioLogoTexture = Canis::AssetManager::GetInstance().Get<Canis::TextureAsset>(
-                Canis::AssetManager::GetInstance().LoadTexture("assets/textures/SupperPupStudioLogo.png")
+            superPupStudioLogoTexture = Canis::AssetManager::GetInstance().Get<Canis::TextureAsset>(
+                Canis::AssetManager::GetInstance().LoadTexture("assets/textures/SuperPupStudioLogo.png")
             )->GetTexture();
 
             // load model
@@ -113,9 +103,9 @@ class SpriteDemoScene : public Canis::Scene
             // load font
             antonioFontId = Canis::AssetManager::GetInstance().LoadText("assets/fonts/Antonio-Bold.ttf", 48);
 
+            // load ecs systems
             renderTextSystem = new Canis::RenderTextSystem();
             spriteRenderer2DSystem = new Canis::SpriteRenderer2DSystem();
-            renderHUDSystem = new Canis::RenderHUDSystem();
 
             renderTextSystem->camera = camera;
             renderTextSystem->window = window;
@@ -124,27 +114,19 @@ class SpriteDemoScene : public Canis::Scene
             spriteRenderer2DSystem->window = window;
             spriteRenderer2DSystem->Init(Canis::GlyphSortType::TEXTURE, &spriteShader);
 
-            renderHUDSystem->window = window;
-            renderHUDSystem->Init(Canis::GlyphSortType::TEXTURE, &spriteShader);
-
             // Draw mode
-            // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
 
         void Load()
         {            
-            camera->Position = glm::vec3(20.0f,20.0f,-20.0f);
-            camera->WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-            camera->Pitch = Canis::PITCH-35.0f;
-            camera->Yaw = Canis::YAW+135.0f;
-            camera->override_camera = false;
-            camera->UpdateCameraVectors();
+            // locking mouse to the window
             mouseLock = true;
             window->MouseLock(mouseLock);
 
             { // camera 2D
-            camera2DEntt = entity_registry.create();
-            entity_registry.emplace<Canis::Camera2DComponent>(camera2DEntt,
+            camera2DEntity = entity_registry.create();
+            entity_registry.emplace<Canis::Camera2DComponent>(camera2DEntity,
                 glm::vec2(0.0f,0.0f), // position
                 1.0f // scale
             );
@@ -170,8 +152,8 @@ class SpriteDemoScene : public Canis::Scene
             );
             }
 
-            { // sprite test supperPupStudioLogoTexture
-            glm::vec2 size = glm::vec2(supperPupStudioLogoTexture.width/4,supperPupStudioLogoTexture.height/4);
+            { // sprite test superPupStudioLogoTexture
+            glm::vec2 size = glm::vec2(superPupStudioLogoTexture.width/4,superPupStudioLogoTexture.height/4);
             entt::entity spriteEntity = entity_registry.create();
             entity_registry.emplace<Canis::RectTransformComponent>(spriteEntity,
                 true, // active
@@ -187,7 +169,7 @@ class SpriteDemoScene : public Canis::Scene
             );
             entity_registry.emplace<Canis::Sprite2DComponent>(spriteEntity,
                 glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), // uv
-                supperPupStudioLogoTexture // texture
+                superPupStudioLogoTexture // texture
             );// test
             }
         }
@@ -210,6 +192,7 @@ class SpriteDemoScene : public Canis::Scene
 
             const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
+            // handle moving the camera
             auto cam = entity_registry.view<Canis::Camera2DComponent>();
             for(auto[entity, camera2D] : cam.each()) {
 
@@ -249,9 +232,24 @@ class SpriteDemoScene : public Canis::Scene
                 }
                 continue;
             }
+        }
 
+        void Draw()
+        {
+            glDepthFunc(GL_LESS);
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // set the background color
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+
+            spriteRenderer2DSystem->UpdateComponents(deltaTime, entity_registry);
+            renderTextSystem->UpdateComponents(deltaTime, entity_registry);
             
+            window->SetWindowName("Canis : Template | fps : " + std::to_string(int(window->fps))
+            + " deltaTime : " + std::to_string(deltaTime));
+        }
 
+        void InputUpdate()
+        {
+            // lock and unlock mouse
             if (inputManager->justPressedKey(SDLK_ESCAPE))
             {
                 mouseLock = !mouseLock;
@@ -259,29 +257,11 @@ class SpriteDemoScene : public Canis::Scene
                 window->MouseLock(mouseLock);
             }
 
+            // reload scene
             if (inputManager->justPressedKey(SDLK_F5))
             {
                 Canis::Log("Load Scene");
-                ((Canis::SceneManager*)sceneManager)->Load("MainScene");
+                ((Canis::SceneManager*)sceneManager)->Load("SpriteDemoScene");
             }
-        }
-
-        void Draw()
-        {
-            glDepthFunc(GL_LESS);
-            glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
-
-            spriteRenderer2DSystem->UpdateComponents(deltaTime, entity_registry);
-            renderTextSystem->UpdateComponents(deltaTime, entity_registry);
-            
-
-            window->SetWindowName("Canis : Template | fps : " + std::to_string(int(window->fps))
-            + " deltaTime : " + std::to_string(deltaTime));
-        }
-
-        void InputUpdate()
-        {
-
         }
 };

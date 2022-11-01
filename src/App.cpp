@@ -29,9 +29,7 @@ void App::Run()
 	srand(seed);
 	Canis::Log("seed : " + std::to_string(seed));
 
-	sceneManager.Add(new MainScene("MainScene"));
-	sceneManager.Add(new ShadowDemoScene("ShadowDemoScene"));
-	sceneManager.Add(new LightingDemoScene("LightingDemoScene"));
+	// Add more scenes here
 	sceneManager.Add(new SpriteDemoScene("SpriteDemoScene"));
 
 	sceneManager.PreLoad(
@@ -51,9 +49,7 @@ void App::Run()
 }
 void App::Load()
 {
-	//sceneManager.Load("MainScene");
-	//sceneManager.Load("ShadowDemoScene");
-	//sceneManager.Load("LightingDemoScene");
+	// Choose the first scene
 	sceneManager.Load("SpriteDemoScene");
 
 	// start timer
