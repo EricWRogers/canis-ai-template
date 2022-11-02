@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.18)
 project(canis_testing)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/dist/${CMAKE_SYSTEM_NAME})
+# hack for MSVC https://stackoverflow.com/questions/47175912/using-cmake-how-to-stop-the-debug-and-release-subdirectories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_SOURCE_DIR}/dist/${CMAKE_SYSTEM_NAME}>)
 set(ASSETS_DIR_NAME assets)
+
+if ( MSVC )
+    
+endif ( MSVC )
 
 add_subdirectory(external/canis)
 
